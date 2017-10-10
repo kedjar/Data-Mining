@@ -1,0 +1,53 @@
+%function MTI830_Face_Recognition_generate_sift_database(face_db)
+%% MTI830 - Forage de textes et de données audiovisuelles
+% M'Hand Kedjar - Août 2016
+% Function that generates the SIFT features for each image for a given database
+clc;clear
+%% Choosing the Face Database
+% All_face_db_path = {'01_ORLDatabase\ORLDatabase',...
+%                     '02_YALEDatabase\TheYaleFaceDatabaseCropped_old',...
+%                     '03_CaltechHumanFaceDatabase\caltech',...                    
+%                     '04_Labelled_Faces_in_the_Wild\lfw-deepfunneled'...
+%                     '05_ColorFeret\ColorFeret\images'};
+
+% All_face_db_path_cropped_resized = {'01_ORLDatabase\ORLDatabaseCroppedResized',...
+%                     '02_YALEDatabase\TheYaleFaceDatabaseCroppedResized',... 
+%                     '03_CaltechHumanFaceDatabase\caltechCroppedResized',...                    
+%                     '04_Labelled_Faces_in_the_Wild\lfw-deepfunneledCroppedResized'...
+%                     '05_ColorFeret\ColorFeret\imagesCroppedResized'};
+                
+All_face_db_path_cropped_not_resized = {'01_ORLDatabase\ORLDatabaseCroppedNotResized',...
+                    '02_YALEDatabase\TheYaleFaceDatabaseCroppedNotResized',... 
+                    '03_CaltechHumanFaceDatabase\caltechCroppedNotResized',...                    
+                    '04_Labelled_Faces_in_the_Wild\lfw-deepfunneledCroppedNotResized'...
+                    '05_ColorFeret\ColorFeret\imagesCroppedNotResized'};
+    
+addpath('pca','sift','hogsvm')
+face_db_main_path = 'E:\datasets';
+
+for face_db_id = 2:5
+    face_db_cropped_not_resized = strcat(face_db_main_path,'\', All_face_db_path_cropped_not_resized{face_db_id});
+    
+    imgSet = imageSet(face_db_cropped_not_resized  , 'recursive');
+    image_path = imgSet(1).ImageLocation{1};
+    image_info = imfinfo(image_path);
+   
+    for i = 1:numel(imgSet)   
+        image_sift_features = cell(1,imgSet(i).Count);
+        [pathstr,name,ext] = fileparts(imgSet(i).ImageLocation{1});
+        for j = 1:imgSet(i).Count;
+            image_path = imgSet(i).ImageLocation{j};
+            [image, descrips, locs] = sift(image_path); 
+            image_sift_features{j} = struct('image', image,...
+                                   'descriptors',descrips ,...
+                                   'locs',locs,...
+                                   'personLabel',imgSet(i).Description,...
+                                   'name',image_path);      
+        end
+        filename = strcat(pathstr,'\',imgSet(i).Description,'_sift_features.mat');
+        save(filename, 'image_sift_features','-v7.3');
+    end
+end
+            
+clc            
+       
